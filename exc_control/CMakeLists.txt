@@ -18,8 +18,8 @@ link_directories(${SFML_LIBRARIES})
 
 add_executable(driver_station src/DriverStation.cpp)
 target_link_libraries(driver_station ${catkin_LIBRARIES} sfml-system sfml-window sfml-graphics)
-add_dependencies(driver_station exc_control_generate_messages_cpp)
+#add_dependencies(driver_station exc_control_generate_messages_cpp)
 
 add_executable(twist_to_motors src/TwistToMotors.cpp)
 target_link_libraries(twist_to_motors ${catkin_LIBRARIES})
-add_dependencies(twist_to_motors exc_control_generate_messages_cpp)
+#add_dependencies(twist_to_motors exc_control_generate_messages_cpp)
