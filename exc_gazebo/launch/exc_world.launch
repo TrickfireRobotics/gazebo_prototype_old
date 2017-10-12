@@ -64,6 +64,8 @@
       <remap from="depth/image"     to="/camera/depth/image_raw"/> <!-- Had to change -->
       <remap from="depth/camera_info"     to="/camera/depth/camera_info"/>
       <param name="frame_id" type="string" value="base_link"/>
+      <param name="Odom/ResetCountdown" type="string" value="1"/>
+      <param name="Reg/Force3DoF"    value="true" />
     </node>
     <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
       <param name="frame_id" type="string" value="base_link"/>
@@ -84,6 +86,10 @@
       <param name="Rtabmap/TimeThr" type="string" value="700"/>
       <param name="Mem/RehearsalSimilarity" type="string" value="0.45"/>
       <param name="RGBD/OptimizeFromGraphEnd" type="string" value="true"/>
+
+      <param name="Rtabmap/StartNewMapOnLoopClosure" value="true"/>
+
+
     </node>
   </group>
   <group ns="depthimage_to_laserscan">
