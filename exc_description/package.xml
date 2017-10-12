@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <name>exc_description</name>
+  <version>0.0.0</version>
+  <description>Excavator Description package</description>
+
+  <maintainer email="adam.krpan@outlook.com">Adam Krpan</maintainer>
+
+  <license>BSD</license>
+
+  <url type="repository">https://github.com/TrickfireRobotics/gazebo_prototype</url>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>joint_state_publisher</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>rviz</run_depend>
+
+  <export>
+  </export>
+</package>

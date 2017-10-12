@@ -1,0 +1,106 @@
+<launch>
+
+  <!-- fold Gazebo -->
+  <!-- fold2 Arguments -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <!-- /fold2 -->
+
+  <!-- fold2 Launch Gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find exc_gazebo)/worlds/exc.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+  <!-- /fold2 -->
+
+  <!-- Load the URDF into the ROS Parameter Server -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find exc_description)/urdf/exc.xacro'" />
+
+  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model excavator -param robot_description -z 5"/>
+
+  <!-- Fixes the Kinect point cloud orientation by adding a second camera link node, which the kinect binds to instead of the actual camera node -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_camera" args="0 0 0 0 3.14159265 1.57079633 /camera_link /camera_link_2"/>
+
+  <!-- /fold Gazebo -->
+
+  <!-- fold Controller -->
+  <include file="$(find exc_control)/launch/exc_control.launch" />
+
+  <node name="twist_to_motors" pkg="exc_control" type="twist_to_motors" />
+  <node name="driver_station" pkg="exc_control" type="driver_station" />
+
+  <!--node pkg="tf2_ros" type="static_transform_publisher" name="odom_to_base" args="0 0 0 0 0 0 /odom /base_link"/-->
+
+  <!-- /fold -->
+
+  <!-- fold OpenNI -->
+  <include file="$(find openni_launch)/launch/openni.launch" >
+    <arg name="depth_registration" value="true"/>
+    <arg name="load_driver" value="false"/>
+    <arg name="camera" value="camera"/>
+    <arg name="rgb_processing" value="true"/> <!-- Confirmed needed -->
+    <arg name="ir_processing" value="false"/>
+    <arg name="depth_processing" value="true"/> <!-- Confirmed needed -->
+    <arg name="disparity_processing" value="false"/>
+    <arg name="disparity_registered_processing" value="false"/>
+    <arg name="hw_registered_processing" value="false"/>
+    <arg name="sw_registered_processing" value="true"/>
+  </include>
+  <!-- /fold -->
+
+  <group ns="rtabmap">
+    <node pkg="rtabmap_ros" type="rgbd_odometry" name="rgbd_odometry" output="screen">
+      <remap from="rgb/image"       to="/camera/rgb/image_raw"/> <!-- Had to change -->
+      <remap from="rgb/camera_info" to="/camera/rgb/camera_info"/>
+
+      <remap from="depth/image"     to="/camera/depth/image_raw"/> <!-- Had to change -->
+      <remap from="depth/camera_info"     to="/camera/depth/camera_info"/>
+      <param name="frame_id" type="string" value="base_link"/>
+    </node>
+    <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="--delete_db_on_start">
+      <param name="frame_id" type="string" value="base_link"/>
+      <param name="subscribe_depth" type="bool" value="true"/>
+
+      <remap from="odom" to="odom"/>
+
+      <remap from="rgb/image" to="/camera/rgb/image_raw"/> <!-- Had to change -->
+      <remap from="rgb/camera_info" to="/camera/rgb/camera_info"/>
+
+      <remap from="depth/image" to="/camera/depth/image_raw"/> <!-- Had to change -->
+      <remap from="depth/camera_info" to="/camera/depth/camera_info"/>
+
+      <param name="queue_size" type="int" value="10"/>
+
+      <param name="RGBD/AngularUpdate" type="string" value="0.01"/>
+      <param name="RGBD/LinearUpdate" type="string" value="0.01"/>
+      <param name="Rtabmap/TimeThr" type="string" value="700"/>
+      <param name="Mem/RehearsalSimilarity" type="string" value="0.45"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="true"/>
+    </node>
+  </group>
+  <group ns="depthimage_to_laserscan">
+    <node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" >
+      <remap from="image" to="/camera/depth/camera_info"/>
+      <remap from="camera_info" to="/camera/depth/camera_info"/>
+    </node>
+  </group>
+  <!--<group ns="move_base">
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <remap from="map" to="/rtabmap/grid_map"/>
+  <rosparam file="$(find autonomous_navigation_prototype)/navigation_params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  <rosparam file="$(find autonomous_navigation_prototype)/navigation_params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+  <rosparam file="$(find autonomous_navigation_prototype)/navigation_params/local_costmap_params.yaml" command="load" />
+  <rosparam file="$(find autonomous_navigation_prototype)/navigation_params/global_costmap_params.yaml" command="load" />
+  <rosparam file="$(find autonomous_navigation_prototype)/navigation_params/base_local_planner_params.yaml" command="load" />
+</node>
+</group>-->
+
+</launch>

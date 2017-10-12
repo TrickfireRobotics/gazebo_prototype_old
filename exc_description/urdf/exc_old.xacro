@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<robot name="excavator" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="height" value="1" />
+  <xacro:property name="radius" value="0.2" />
+  <xacro:property name="mass" value="1" />
+
+  <xacro:include filename="$(find exc_description)/urdf/exc.gazebo" />
+
+  <link name="world"/>
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="${height}" radius="0.2" />
+      </geometry>
+      <origin xyz="0 0 ${height/2}" />
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="${height}" radius="0.2" />
+      </geometry>
+      <origin xyz="0 0 ${height/2}" />
+    </collision>
+    <inertial>
+      <origin xyz="0 0 ${height/2}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass / 12.0 * (radius*radius*pi + height*height)}" ixy="0.0" ixz="0.0"
+        iyy="${mass / 12.0 * (height*height + radius*radius*pi)}" iyz="0.0"
+        izz="${mass / 12.0 * (radius*radius*pi + radius*radius*pi)}"/>
+      </inertial>
+    </link>
+
+    <joint name="fixed" type="fixed">
+      <parent link="world"/>
+      <child link="base_link"/>
+    </joint>
+
+    <link name="camera_link">
+      <collision>
+        <origin xyz="0 0 0"/>
+        <geometry>
+          <box size="${radius} ${radius} ${radius}"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="0 0 0"/>
+        <geometry>
+          <box size="${radius} ${radius} ${radius}"/>
+        </geometry>
+      </visual>
+
+      <inertial>
+        <mass value="1e-5" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+      </inertial>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+      <axis xyz="0 1 0" />
+      <origin xyz="${radius/2} 0 ${height}" />
+      <parent link="base_link" />
+      <child link="camera_link" />
+    </joint>
+  </robot>
